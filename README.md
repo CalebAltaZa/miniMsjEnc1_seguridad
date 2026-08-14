@@ -106,7 +106,7 @@ Esto levanta:
 | `GET` | `/api/messages/{id}/plaintext` | Texto descifrado vía `/confidentiality/decrypt` |
 | `WS` | `/ws?token=...` | Chat en tiempo real (autenticado por token) |
 
-## Demostración de manipulación (para el docente)
+## Demostración de manipulación
 
 1. Iniciar sesión con una cuenta y enviar un mensaje; esperar a que diga
    **"Mensaje verificado"**.
