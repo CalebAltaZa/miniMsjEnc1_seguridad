@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Seguro — Iniciar sesión</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --line: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #4f86f7;
+    --badge-nv: #9aa0a6;
+    --badge-v: #2e7d32;
+    --badge-i: #c62828;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  /* ---------- Pantalla de login ---------- */
+  .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
+  .login-card {
+    width: 100%; max-width: 380px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .login-card h1 { margin: 0 0 4px; font-size: 1.3rem; text-align: center; }
+  .login-card p.desc { margin: 0 0 20px; font-size: .85rem; color: var(--muted); text-align: center; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tabs button {
+    flex: 1; padding: 8px; border: 1px solid var(--line); border-radius: 8px;
+    background: transparent; color: var(--muted); cursor: pointer; font-weight: 600;
+  }
+  .tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 4px; }
+  .field input {
+    width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--text); outline: none;
+  }
+  .login-card button[type="submit"] {
+    width: 100%; padding: 11px; border: none; border-radius: 8px;
+    background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; margin-top: 6px;
+  }
+  .error { color: #f87171; font-size: .8rem; min-height: 1em; margin-top: 10px; text-align: center; }
+  /* ---------- Chat ---------- */
+  .chat-wrap { display: none; max-width: 780px; margin: 0 auto; padding: 16px; flex-direction: column; height: 100vh; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px 12px 0 0; padding: 12px 16px;
+  }
+  .topbar .title { font-size: .95rem; font-weight: 700; }
+  .topbar .who { font-size: .8rem; color: var(--muted); }
+  .topbar .logout {
+    background: transparent; border: 1px solid var(--line); color: var(--muted);
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600;
+  }
+  .messages {
+    flex: 1; overflow-y: auto; padding: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-top: none;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .msg {
+    max-width: 78%; padding: 8px 12px; border-radius: 12px;
+    background: #334155; align-self: flex-start; word-break: break-word;
+  }
+  .msg.mine { align-self: flex-end; background: #3b5bdb; }
+  .msg .meta { display: flex; align-items: center; gap: 6px; font-size: .7rem; color: var(--muted); margin-bottom: 3px; flex-wrap: wrap; }
+  .msg.mine .meta { color: #c7d2fe; }
+  .msg .meta .sender { font-weight: 700; }
+  .badge { font-size: .68rem; padding: 1px 8px; border-radius: 999px; color: #fff; font-weight: 600; }
+  .badge.no_verificado { background: var(--badge-nv); }
+  .badge.mensaje_verificado { background: var(--badge-v); }
+  .badge.verificacion_fallida { background: var(--badge-i); }
+  .input-row { display: flex; background: var(--panel); border: 1px solid var(--line); border-top: none; border-radius: 0 0 12px 12px; }
+  .input-row input {
+    flex: 1; padding: 12px; border: none; outline: none; background: transparent; color: var(--text);
+  }
+  .input-row button {
+    padding: 12px 20px; border: none; cursor: pointer; font-weight: 700; color: #fff; background: var(--accent);
+  }
+  .empty { color: var(--muted); font-size: .85rem; text-align: center; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ============ PANTALLA DE LOGIN / REGISTRO ============ -->
+<div class="login-wrap" id="loginView">
+  <div class="login-card">
+    <h1>Chat Seguro</h1>
+    <p class="desc">Cifrado y verificación de integridad con la CIA API</p>
+    <div class="tabs">
+      <button id="tabLogin" class="active" onclick="showForm('login')">Iniciar sesión</button>
+      <button id="tabRegister" onclick="showForm('register')">Registrarse</button>
+    </div>
+
+    <form id="loginForm" onsubmit="doLogin(event)">
+      <div class="field"><label>Usuario</label><input id="loginUser" autocomplete="username"></div>
+      <div class="field"><label>Contraseña</label><input id="loginPass" type="password" autocomplete="current-password"></div>
+      <button type="submit">Entrar al chat</button>
+    </form>
+
+    <form id="registerForm" onsubmit="doRegister(event)" style="display:none">
+      <div class="field"><label>Usuario</label><input id="regUser" autocomplete="username"></div>
+      <div class="field"><label>Contraseña (mínimo 4)</label><input id="regPass" type="password" autocomplete="new-password"></div>
+      <button type="submit">Crear cuenta y entrar</button>
+    </form>
+
+    <div class="error" id="authError"></div>
+    <p class="desc" style="margin-top:14px">Abre esta página en dos pestañas y entra con dos cuentas para chatear.</p>
+  </div>
+</div>
+
+<!-- ============ PANTALLA DE CHAT ============ -->
+<div class="chat-wrap" id="chatView">
+  <div class="topbar">
+    <div>
+      <div class="title">Chat Seguro</div>
+      <div class="who">Sesión: <span id="whoAmI"></span></div>
+    </div>
+    <button class="logout" onclick="doLogout()">Cerrar sesión</button>
+  </div>
+  <div class="messages" id="msgs"><div class="empty">Conectando…</div></div>
+  <div class="input-row">
+    <input id="inputMsg" placeholder="Escribe tu mensaje…" autocomplete="off">
+    <button onclick="sendMsg()">Enviar</button>
+  </div>
+</div>
+
+<script>
+  const state = { token: null, username: null, ws: null };
+
+  function showForm(which) {
+    document.getElementById('tabLogin').classList.toggle('active', which === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', which === 'register');
+    document.getElementById('loginForm').style.display = which === 'login' ? '' : 'none';
+    document.getElementById('registerForm').style.display = which === 'register' ? '' : 'none';
+    document.getElementById('authError').textContent = '';
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: document.getElementById('loginUser').value.trim(), password: document.getElementById('loginPass').value }),
+    });
+    if (!res.ok) return setError((await res.json()).detail || 'error');
+    const data = await res.json();
+    startSession(data);
+  }
+
+  async function doRegister(e) {
+    e.preventDefault();
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: document.getElementById('regUser').value.trim(), password: document.getElementById('regPass').value }),
+    });
+    if (!res.ok) return setError((await res.json()).detail || 'error');
+    // Tras registrarse, entra automáticamente
+    const login = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: document.getElementById('regUser').value.trim(), password: document.getElementById('regPass').value }),
+    });
+    const data = await login.json();
+    startSession(data);
+  }
+
+  function setError(msg) { document.getElementById('authError').textContent = msg; }
+
+  function startSession(data) {
+    state.token = data.token;
+    state.username = data.username;
+    localStorage.setItem('chat_token', state.token);
+    localStorage.setItem('chat_user', state.username);
+    showChat();
+  }
+
+  // ---------- Chat ----------
+  function showChat() {
+    document.getElementById('loginView').style.display = 'none';
+    const wrap = document.getElementById('chatView');
+    wrap.style.display = 'flex';
+    document.getElementById('whoAmI').textContent = state.username;
+    connectWs();
+  }
+
+  function showLogin() {
+    document.getElementById('loginView').style.display = 'flex';
+    document.getElementById('chatView').style.display = 'none';
+  }
+
+  function connectWs() {
+    if (state.ws) state.ws.close();
+    state.ws = new WebSocket(`ws://${location.host}/ws?token=${state.token}`);
+    state.ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.type === 'error') { logoutClean(); return; }
+      if (data.type === 'new_message') addMessage(data.message);
+      else if (data.type === 'status_update') updateStatus(data.id, data.status);
+    };
+    state.ws.onopen = () => { document.getElementById('msgs').innerHTML = ''; };
+  }
+
+  function badge(status) {
+    const map = {
+      'No verificado': 'no_verificado',
+      'Mensaje verificado': 'mensaje_verificado',
+      'Verificación fallida': 'verificacion_fallida',
+    };
+    return `<span class="badge ${map[status] || 'no_verificado'}">${status}</span>`;
+  }
+
+  function addMessage(msg) {
+    const list = document.getElementById('msgs');
+    const empty = list.querySelector('.empty');
+    if (empty) empty.remove();
+    const mine = msg.sender === state.username;
+    const div = document.createElement('div');
+    div.className = 'msg' + (mine ? ' mine' : '');
+    div.dataset.id = msg.id;
+    div.innerHTML = `
+      <div class="meta"><span class="sender">${mine ? 'Tú' : msg.sender}</span><span>#${msg.id}</span>${badge(msg.status)}</div>
+      <div class="text"></div>`;
+    div.querySelector('.text').textContent = msg.plaintext;
+    list.appendChild(div);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function updateStatus(id, status) {
+    document.querySelectorAll('#msgs .msg').forEach(m => {
+      if (Number(m.dataset.id) === id) m.querySelector('.badge').outerHTML = badge(status);
+    });
+  }
+
+  function sendMsg() {
+    const el = document.getElementById('inputMsg');
+    const text = el.value.trim();
+    if (!text) return;
+    state.ws.send(text);
+    el.value = '';
+  }
+  document.getElementById('inputMsg').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMsg(); });
+
+  async function doLogout() {
+    await fetch('/api/logout', { method: 'POST', headers: { Authorization: `Bearer ${state.token}` } });
+    logoutClean();
+  }
+
+  function logoutClean() {
+    if (state.ws) state.ws.close();
+    state.token = state.username = null;
+    localStorage.removeItem('chat_token');
+    localStorage.removeItem('chat_user');
+    showLogin();
+  }
+
+  // ---------- Al cargar: restaurar sesión si hay token guardado ----------
+  (async function init() {
+    const token = localStorage.getItem('chat_token');
+    if (!token) return;
+    const res = await fetch('/api/me', { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return logoutClean();
+    const data = await res.json();
+    state.token = token;
+    state.username = data.username;
+    showChat();
+  })();
+</script>
+</body>
+</html>

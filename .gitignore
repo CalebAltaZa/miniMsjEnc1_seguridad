@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Secretos: claves de cifrado de la CIA API (¡nunca subir a GitHub!)
+.cia_keys/
+
+# Registros y temporales
+*.log
+.DS_Store
